@@ -1,0 +1,76 @@
+/* Full screen gradient background */
+.home-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #3b82f6, #9333ea, #f59e0b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Centered content */
+.home-content {
+  text-align: center;
+  max-width: 700px;
+  color: white;
+}
+
+/* Title and description */
+.home-header h1 {
+  font-size: 4rem;
+  font-weight: 700;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.home-header p {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+/* Card box for how-to section */
+.home-how-to {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+.home-how-to h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.home-how-to ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.home-how-to li {
+  margin-bottom: 0.5rem;
+}
+
+/* Button */
+.home-button {
+  background-color: #ffffff;
+  color: #2563eb;
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.9rem 3rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.home-button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
