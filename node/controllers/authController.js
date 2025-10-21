@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
       firstName,
       lastName,
       email,
-      password,       // ❗️no manual hash — handled by pre('save')
+      password,     
       phone,
       role: role || 'user'
     });
@@ -158,7 +158,7 @@ exports.resetPassword = async (req, res) => {
     const { password } = req.body;
     if (!password) return res.status(400).json({ message: 'Password is required' });
 
-    user.password = password;  // ❗️no manual hash — pre('save') will hash
+    user.password = password;  
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();

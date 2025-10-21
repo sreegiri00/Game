@@ -8,7 +8,7 @@ It supports authentication, user management, OTP verification, password reset, a
 ## 📂 Folder Structure
 
 ```
-backend-bookmyevent/
+game/
 │
 ├── config/
 │   ├── db.js                 # MongoDB connection
@@ -58,7 +58,7 @@ npm install
 3. Set up `.env` file:
 ```
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/bookmyevent
+MONGO_URI=mongodb://localhost:27017/game
 JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=7d
 EMAIL_HOST=smtp.gmail.com
