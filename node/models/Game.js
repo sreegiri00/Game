@@ -12,9 +12,19 @@ const GameSchema = new mongoose.Schema({
     expires: 60, 
   },
   moves: {
-    type: [Number], 
+    type: [String],
     default: [],    
   },
+  chats: {
+  type: [
+    {
+      userId: String,
+      message: String,
+      time: { type: Date, default: Date.now }
+    }
+  ],
+  default: []
+},
   endedAt: { type: Date, default: null },
 });
 

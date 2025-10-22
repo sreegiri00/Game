@@ -74,33 +74,36 @@ async function addUserToGame(req, res) {
     const gameId = parseInt(req.params.gameId);
     const { userId, password } = req.body;
 
-    if (!userId) return res.status(400).json({ message: "userId required" });
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
 
     // --- Find user ---
     const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // --- Find the game ---
+    const game = await Game.findOne({ gameId });
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
 
     // --- Check password ---
-    
+    if (game.password !== password) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
     // --- Check if user already exists in this game ---
-    const gameuser = await Game.findOne({ gameId, users: userId });
-
-    if (gameuser.password !== password) {
-    return res.status(400).json({ message: "Incorrect password" });
-  }
-
-    if (gameuser) {
+    const userExists = game.users.includes(userId);
+    if (userExists) {
       return res.status(400).json({ message: "User already exists in this game" });
     }
 
     // --- Add user to game ---
-    const game = await Game.findOneAndUpdate(
-      { gameId },
-      { $addToSet: { users: userId } },
-      { new: true }
-    );
-
-    if (!game) return res.status(404).json({ message: "Game not found" });
+    game.users.push(userId);
+    await game.save();
 
     return res.status(200).json({ message: "User added", game });
 
@@ -109,6 +112,7 @@ async function addUserToGame(req, res) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
 
 
 // --- Remove user from game ---
@@ -192,7 +196,7 @@ async function getEvents(req, res) {
 async function endGame(req, res) {
   try {
     const gameId = parseInt(req.params.gameId);
-
+    
     const game = await Game.findOneAndUpdate(
       { gameId },
       { $set: { endedAt: new Date() } },
@@ -208,6 +212,136 @@ async function endGame(req, res) {
   }
 }
 
+//  Game chat section start 
+async function GameChat(req, res) {
+  try {
+    const gameId = parseInt(req.params.gameId);
+    const { userId, password, chat } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    // --- Find user ---
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // --- Find the game ---
+    const game = await Game.findOne({ gameId });
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    // --- Check password ---
+    if (game.password !== password) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+    
+    // --- Check if user is part of the game ---
+    const userExists = game.users.includes(userId);
+    if (!userExists) {
+      return res.status(400).json({ message: "User not part of this game" });
+    }
+
+    // --- Add chat message ---
+    game.chats.push({ userId, message: chat });
+    await game.save();
+
+    return res.status(200).json({ message: "Chat added", chats: game.chats });
+    
+  } catch (err) {
+    console.error("Gamechat error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+async function getGameChats(req, res) {
+  try {
+    const gameId = parseInt(req.params.gameId);
+    const { password } = req.query; // Use query params for GET
+
+    // --- Find the game ---
+    const game = await Game.findOne({ gameId });
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    // --- Check password ---
+    if (game.password !== password) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    // --- Return all chats ---
+    return res.status(200).json({
+      message: "Chats fetched successfully",
+      chats: game.chats,
+    });
+
+  } catch (err) {
+    console.error("getGameChats error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+//  Game chat section ends
+
+//  Game move section start 
+async function GameMove(req, res) {
+  try {
+    const gameId = parseInt(req.params.gameId);
+    const { userId, password, moveNumber } = req.body; // renamed 'chat' → 'moveNumber'
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId required" });
+    }
+
+    if (moveNumber === undefined) {
+      return res.status(400).json({ message: "moveNumber required" });
+    }
+
+    // --- Find user ---
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // --- Find the game ---
+    const game = await Game.findOne({ gameId });
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    // --- Check password ---
+    if (game.password !== password) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    // --- Check if user is part of the game ---
+    const userExists = game.users.includes(userId);
+    if (!userExists) {
+      return res.status(400).json({ message: "User not part of this game" });
+    }
+
+    // --- Create formatted move (like "12-ADM20250001") ---
+    const formattedMove = `${moveNumber}-${userId}`;
+
+    // --- Add move to array ---
+    game.moves.push(formattedMove);
+    await game.save();
+
+    return res.status(200).json({ message: "Move added", moves: game.moves });
+
+  } catch (err) {
+    console.error("GameMove error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+//  Game move section ends
+
+
 module.exports = {
   createGame,
   getGameByGameId,
@@ -216,4 +350,7 @@ module.exports = {
   recordEvent,
   getEvents,
   endGame,
+  GameMove,
+  GameChat,
+  getGameChats
 };
