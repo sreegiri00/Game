@@ -74,3 +74,110 @@
   background-color: rgba(255, 255, 255, 0.9);
   transform: scale(1.05);
 }
+
+
+
+/* satrt  */
+
+/* --- Page Container --- */
+.game-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to bottom right, #4f46e5, #7e22ce, #ec4899);
+  padding: 20px;
+}
+
+/* --- Content Wrapper --- */
+.content {
+  text-align: center;
+  max-width: 700px;
+  width: 100%;
+  color: white;
+}
+
+/* --- Heading Section --- */
+.heading-section h1 {
+  font-size: 64px;
+  font-weight: bold;
+  text-shadow: 0px 3px 10px rgba(0, 0, 0, 0.4);
+  margin-bottom: 10px;
+}
+
+.heading-section p {
+  font-size: 20px;
+  opacity: 0.9;
+}
+
+/* --- Card Sections --- */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+  border-radius: 20px;
+  padding: 30px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.card h2 {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.card p,
+.card li {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.card li {
+  margin: 8px 0;
+}
+
+/* --- Button --- */
+.start-btn {
+  background: white;
+  color: #4f46e5;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 16px 40px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+}
+
+.start-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+
+/* game start  */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out;
+}
+
+/* game ends  */

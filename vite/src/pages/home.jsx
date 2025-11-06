@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient"; // ✅ import client
+import "../css/Home.css"
 
 const Home = () => {
   const [user, setUser] = useState(null);
@@ -24,20 +25,28 @@ const Home = () => {
   }, [user, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center p-4">
-      <div className="text-center space-y-8 max-w-2xl">
-        <div className="space-y-4">
-          <h1 className="text-6xl font-bold text-white drop-shadow-lg">
-            🎱 Bingo Game
-          </h1>
-          <p className="text-xl text-white/90">
-            Test your luck and mark your way to victory!
+    <div className="game-container">
+      <div className="content">
+        {/* --- Heading --- */}
+        <div className="heading-section">
+          <h1>🎮 Let’s Start the Game!</h1>
+          <p>Step into the world of online Bingo — where fun meets competition!</p>
+        </div>
+
+        {/* --- Online Gameplay --- */}
+        <div className="card">
+          <h2>Online Gameplay</h2>
+          <p>
+            Play with friends or challenge random players in real-time. Each player
+            gets a unique board, and numbers are called live for everyone.
+            Stay sharp, mark your numbers fast, and be the first to shout <b>BINGO!</b>
           </p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 space-y-4">
-          <h2 className="text-2xl font-semibold text-white">How to Play</h2>
-          <ul className="text-white/90 space-y-2 text-left">
+        {/* --- How to Play --- */}
+        <div className="card">
+          <h2>How to Play</h2>
+          <ul>
             <li>✓ Get a random bingo board</li>
             <li>✓ Numbers are called automatically</li>
             <li>✓ Mark the numbers on your board</li>
@@ -45,10 +54,8 @@ const Home = () => {
           </ul>
         </div>
 
-        <button
-          onClick={() => navigate("/auth")}
-          className="bg-white text-primary hover:bg-white/90 text-xl px-8 py-6 rounded-lg font-semibold"
-        >
+        {/* --- Button --- */}
+        <button onClick={() => navigate("/auth")} className="start-btn">
           Get Started
         </button>
       </div>

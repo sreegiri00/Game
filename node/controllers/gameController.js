@@ -1,5 +1,6 @@
 const Game = require("../models/Game");
 const User = require("../models/User")
+const {generateGameToken } = require('../utils/tokenGenerator');
 
 // --- Helper: generate numeric gameId if user doesn't provide one ---
 async function generateUniqueGameId() {
@@ -35,6 +36,8 @@ async function createGame(req, res) {
     const gameCode = await generateUniqueGameId();
 
     // 3️⃣ Create the game
+    console.log("iddss ::",user._id);
+    
     const game = new Game({
       gameId,
       gameCode,
@@ -43,8 +46,8 @@ async function createGame(req, res) {
     });
 
     await game.save();
-
-    return res.status(201).json({ message: "Game created successfully", game });
+    const gametoken = generateGameToken({ id: gameId,gameCode});
+    return res.status(201).json({ message: "Game created successfully", gametoken });
   } catch (err) {
     console.error("createGame error:", err);
     return res.status(500).json({ message: "Internal server error", error: err.message });
@@ -55,6 +58,8 @@ async function createGame(req, res) {
 async function getGameByGameId(req, res) {
   try {
     const gameId = parseInt(req.params.gameId);
+
+
     if (isNaN(gameId))
       return res.status(400).json({ message: "Invalid gameId" });
 
@@ -72,14 +77,14 @@ async function getGameByGameId(req, res) {
 async function addUserToGame(req, res) {
   try {
     const gameId = parseInt(req.params.gameId);
-    const { userId, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!userId) {
+    if (!email) {
       return res.status(400).json({ message: "userId required" });
     }
 
     // --- Find user ---
-    const user = await User.findOne({ userId });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -89,6 +94,7 @@ async function addUserToGame(req, res) {
     if (!game) {
       return res.status(404).json({ message: "Game not found" });
     }
+console.log("jann",game);
 
     // --- Check password ---
     if (game.password !== password) {
@@ -96,13 +102,13 @@ async function addUserToGame(req, res) {
     }
 
     // --- Check if user already exists in this game ---
-    const userExists = game.users.includes(userId);
+    const userExists = game.users.includes( );
     if (userExists) {
       return res.status(400).json({ message: "User already exists in this game" });
     }
 
     // --- Add user to game ---
-    game.users.push(userId);
+    game.users.push(email);
     await game.save();
 
     return res.status(200).json({ message: "User added", game });
@@ -196,7 +202,7 @@ async function getEvents(req, res) {
 async function endGame(req, res) {
   try {
     const gameId = parseInt(req.params.gameId);
-    
+
     const game = await Game.findOneAndUpdate(
       { gameId },
       { $set: { endedAt: new Date() } },
@@ -238,7 +244,7 @@ async function GameChat(req, res) {
     if (game.password !== password) {
       return res.status(400).json({ message: "Incorrect password" });
     }
-    
+
     // --- Check if user is part of the game ---
     const userExists = game.users.includes(userId);
     if (!userExists) {
@@ -250,7 +256,7 @@ async function GameChat(req, res) {
     await game.save();
 
     return res.status(200).json({ message: "Chat added", chats: game.chats });
-    
+
   } catch (err) {
     console.error("Gamechat error:", err);
     return res.status(500).json({ message: "Internal server error" });

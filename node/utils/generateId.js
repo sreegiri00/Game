@@ -1,5 +1,3 @@
-const User = require('../models/User');
-
 const rolePrefixMap = {
   superadmin: 'ADM',
   admin: 'ADM',
@@ -7,15 +5,11 @@ const rolePrefixMap = {
   user: 'USE'
 };
 
-async function generateUserId(role) {
-  const prefix = rolePrefixMap[role.toLowerCase()];
-  if (!prefix) throw new Error(`Invalid role: ${role}`);
-
-  const year = new Date().getFullYear();
-  const regex = new RegExp('^' + prefix + year);
-  const count = await User.countDocuments({ userId: { $regex: regex } });
-  const serial = String(count + 1).padStart(4, '0');
-  return `${prefix}${year}${serial}`;
+function generateUserId(role = 'user') {
+  const prefix = rolePrefixMap[role.toLowerCase()] || 'USE';
+  const year = new Date().getFullYear().toString().slice(-2); // e.g. "25"
+  const random = Math.floor(100000 + Math.random() * 900000); // random 6-digit number
+  return `${prefix}${year}${random}`;
 }
 
 module.exports = { generateUserId };

@@ -14,3 +14,13 @@ exports.generateResetToken = () => {
   const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
   return { resetToken, resetTokenHash };
 };
+
+exports.generateGameToken = (payload, expiresIn = process.env.GAME_EXPIRES_IN || '7d') => {
+  return jwt.sign(payload, process.env.GMAE_SECRET, { expiresIn });
+};
+
+exports.generateGameResetToken = () => {
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+  return { resetToken, resetTokenHash };
+};

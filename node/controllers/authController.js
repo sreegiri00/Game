@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs/dist/bcrypt');
 const User = require('../models/User');
 const { generateUserId } = require('../utils/generateId');
 const sendEmail = require('../utils/sendEmail');
@@ -8,66 +9,106 @@ const crypto = require('crypto');
 // ------------------ REGISTER ------------------
 exports.register = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phone, role } = req.body;
-    if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
+    const {  email, role } = req.body;
 
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'Email already registered' });
+    if (existing)
+      return res.status(400).json({ message: "Email already registered" });
 
-    const userId = await generateUserId(role || 'user');
+    // Generate unique userId
+    let userId;
+    let isUnique = false;
+
+    while (!isUnique) {
+      const tempId = await generateUserId(role || "user");
+      const existingId = await User.findOne({ userId: tempId });
+      if (!existingId) {
+        userId = tempId;
+        isUnique = true;
+      }
+    }
 
     const user = await User.create({
-      userId,
-      firstName,
-      lastName,
+      userId, 
       email,
-      password,     
-      phone,
-      role: role || 'user'
+      role: role || "user",
     });
 
     try {
-      await sendEmail(user.email, 'Welcome to BookMyEvent', welcomeEmail(user));
+      await sendEmail(user.email, "Welcome to Game World", welcomeEmail(user));
     } catch (e) {
-      console.error('Welcome email failed:', e.message);
+      console.error("Welcome email failed:", e.message);
     }
 
     const token = generateJwtToken({ id: user._id });
-    res.status(201).json({ message: 'User registered', user: user.toJSON(), token });
+    res.status(201).json({ message: "User registered", user, token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Registration failed', error: err.message });
+    res
+      .status(500)
+      .json({ message: "Registration failed", error: err.message });
   }
 };
 
 // ------------------ LOGIN ------------------
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password)
-      return res.status(400).json({ message: 'Provide email and password' });
 
+    // --- Validate input ---
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please provide email and password" });
+    }
+
+    // --- Find user by email ---
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-    // ⛔ don't deleted this section
-    // if (!user.isVerified) return res.status(403).json({ message: 'Account not verified' });
-    // if (!user.isActive) return res.status(403).json({ message: 'Account is deactivated' });
+    // ⛔ Don't delete this section
+    // if (!user.isVerified)
+    //   return res.status(403).json({ message: "Account not verified" });
+    // if (!user.isActive)
+    //   return res.status(403).json({ message: "Account is deactivated" });
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    // --- Compare passwords ---
+    // const isMatch = await user.comparePassword(password);
 
+    const isMatch = await bcrypt.compare(req.body.password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "The password is incorrect." });
+    }
+
+    // --- Update last login timestamp ---
     user.lastLogin = new Date();
     await user.save();
 
-    const token = generateJwtToken({ id: user._id });
-    res.json({ message: 'Logged in', user: user.toJSON(), token });
+    // --- Generate JWT token ---
+    const token = generateJwtToken({ id: user._id, role: user.role, email: user.email });
+
+    // --- Remove sensitive data before sending response ---
+    const { password: _, otp, otpExpire, ...safeUser } = user.toObject();
+
+    res.status(200).json({
+      message: "Logged in successfully",
+      user: safeUser,
+      token,
+    });
+
   } catch (err) {
-    res.status(500).json({ message: 'Login failed', error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({
+      message: "Login failed",
+      error: err.message,
+    });
   }
 };
+
+// ----------------token
+
+
 
 // ------------------ LOGOUT ------------------
 exports.logout = (req, res) => {
@@ -78,8 +119,7 @@ exports.logout = (req, res) => {
 exports.sendOtp = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log("hi  ",email);
-    
+
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -115,6 +155,35 @@ exports.verifyOtp = async (req, res) => {
     res.json({ message: 'OTP verified' });
   } catch (err) {
     res.status(500).json({ message: 'OTP verify failed', error: err.message });
+  }
+};
+
+
+
+// ------------------ SET PASSWORD ------------------
+exports.setPassword = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user.isVerified)
+      return res.status(400).json({ message: "Please verify your email first" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    user.password = hashed;
+    await user.save();
+
+    const token = generateJwtToken({ id: user._id });
+
+    res.status(200).json({
+      success: true,
+      message: "Password set successfully",
+      token,
+    });
+  } catch (err) {
+    console.error("Set password error:", err);
+    res.status(500).json({ message: "Failed to set password", error: err.message });
   }
 };
 
@@ -158,7 +227,7 @@ exports.resetPassword = async (req, res) => {
     const { password } = req.body;
     if (!password) return res.status(400).json({ message: 'Password is required' });
 
-    user.password = password;  
+    user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
